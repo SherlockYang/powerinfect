@@ -1,5 +1,5 @@
-import numpy as np
 import math as math
+import random as random
 
 class Model:
     def __init__(self, _X, _K, _D):
@@ -11,9 +11,9 @@ class Model:
 
     def InitParameter(self):
         self.beta = 1.0
-        self.rho = np.random.rand(self.K)
-        self.delta = np.random.rand(self.K)
-        self.theta = [[0] * self.K for t in xrange(self.T)]
+        self.rho = [random.random() for _ in xrange(self.K)]
+        self.delta = [random.random() for _ in xrange(self.K)]
+        self.theta = [[0 for _ in xrange(self.R)] for _ in range(self.T)]
         self.theta[0][0] = 1.0
 
     def SaveParameter(self):
@@ -44,8 +44,7 @@ class Model:
             return 
         C = 0.0
         for r in xrange(self.R):
-            C += self.X[r][t] * r / (self.beta * (t + 1))
-            #C += self.X[r][t] * self.CalcPhi(r, t)
+            C += self.X[r][t] * self.CalcPhi(r, t)
         C /= self.D
         self.theta[t][0] = self.theta[t - 1][0] - self.rho[0] * self.theta[t - 1][0] * self.delta[0] * C
         for k in xrange(1, self.K):
@@ -62,18 +61,14 @@ class Model:
     def CalcGradient(self, t, r, C2):
         # calculate the gradient of rho
         _rho = [0] * self.K
-        C1 = -1 * self.X[r][t] * r / (self.beta * (t + 1))
-        #C1 = -1 * self.X[r][t] * self.CalcPhi(r, t)
+        C1 = -1 * self.X[r][t] * self.CalcPhi(r, t)
         if r > 0:
-            C1 += self.X[r - 1][t] * (r - 1) / (self.beta * (t + 1))
-            #C1 += self.X[r - 1][t] * self.CalcPhi(r - 1, t)
+            C1 += self.X[r - 1][t] * self.CalcPhi(r - 1, t)
         C1 /= self.D
-        #C2 = 0.0
         if t > 0:
-        #    for r in xrange(self.R):
-        #        C2 += self.X[r][t - 1] * r
             C2 /= (self.beta * t)
         C2 /= self.D
+
         for k in xrange(self.K):
             if t > 0:
                 _rho[k] = -2 * self.rho[k] * self.theta[t - 1][k] * self.delta[k]
@@ -84,11 +79,9 @@ class Model:
                 _rho[k] = C1
         # calculate the gradient of delta
         _delta = [0] * self.K
-        C3 = -1 * self.X[r][t] * r / (self.beta * (t + 1))
-        #C3 = -1 * self.X[r][t] * self.CalcPhi(r, t)
+        C3 = -1 * self.X[r][t] * self.CalcPhi(r, t)
         if r > 0:
-            C3 += self.X[r - 1][t] * (r - 1) / (self.beta * (t + 1))
-            #C3 += self.X[r - 1][t] * self.CalcPhi(r - 1, t)
+            C3 += self.X[r - 1][t] * self.CalcPhi(r - 1, t)
         for k in xrange(self.K):
             if t > 0:
                 _delta[k] = -1 * self.rho[k] * self.theta[t - 1][k]
@@ -109,17 +102,15 @@ class Model:
         for k in xrange(self.K):
             C += self.theta[t][k] * self.rho[k]
         for r in xrange(self.R):
-            x = -1 * self.X[r][t - 1] * r / (self.beta * (t + 1))
-            #x = -1 * self.X[r][t - 1] * self.CalcPhi(r, t)
+            x = -1 * self.X[r][t - 1] * self.CalcPhi(r, t)
             if r > 0:
-                x += self.X[r - 1][t - 1] * (r - 1) / (self.beta * t)
-                #x += self.X[r - 1][t - 1] * self.CalcPhi(r - 1, t - 1)
+                x += self.X[r - 1][t - 1] * self.CalcPhi(r - 1, t - 1)
             x = x * C / self.D + self.X[r][t - 1]
             _X += [x]
         return _X
 
     ################################
-    # parameter estimation
+    # parameter estimation by L-M method
     # X: observed data
     # K: total number of user status
     # D: total number of posts
@@ -138,14 +129,14 @@ class Model:
                 self.CalcTheta(t + 1)
                 _X = self.Predict(t + 1)
                 #print 'pred res: ', _X
-                C2 = [0] * self.R
+                C = [0] * self.R
                 if t > 0:
                     for r in xrange(self.R):
-                        C2[r] = self.X[r][t - 1] * r
+                        C[r] = self.X[r][t - 1] * r
                 for r in xrange(self.R):
                     error = self.X[r][t + 1] - _X[r]
                     loss += pow(error, 2)
-                    (_rho, _delta) = self.CalcGradient(t, r, C2[r])
+                    (_rho, _delta) = self.CalcGradient(t, r, C[r])
                     for k in xrange(self.K):
                         self.rho[k] += -2 * _rho[k] * error
                         self.delta[k] += -2 * _delta[k] * error
@@ -165,7 +156,7 @@ class Model:
             print 'square loss: ', loss 
         self.SaveParameter()
 
-    def Fit(self):
+    def Fit(self, time_list):
         Y = []
         _Y = []
         for t in xrange(1, self.T):
@@ -177,5 +168,7 @@ class Model:
                 _y += r * _X[r]
             Y += [y]
             _Y += [_y]
+
         return (Y, _Y)
+
 

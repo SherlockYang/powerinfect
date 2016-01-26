@@ -1,16 +1,14 @@
-import numpy as np
 import math as math
 
 # T: number of time intervals
 def ReadWeixin(fileDir):
     file = open(fileDir)
     X = []
-    max_line = 5
+    max_line = 3
     cnt = 0
     for line in file:
         x = []
         tokens = line.split(' ')
-        #print cnt
         if line.find('http') != -1:
             continue
         for token in tokens:
@@ -92,7 +90,6 @@ def TransferInput(post_log, time_list):
         for t in xrange(0, T):
             idx = y[t]
             X[idx][t] += 1
-    print 'R: ', R
     #print 'X: ', X
     #print 'X^T: ', [[X[i][j] for i in xrange(R)] for j in range(T)]
     return (R, X)
@@ -100,8 +97,6 @@ def TransferInput(post_log, time_list):
 def Load(file_dir):
     post_log = ReadWeixin(file_dir)
     D = len(post_log)
-    #print 'post_log: ', post_log
     time_list = DefineTimeInterval(post_log)
-    print '#posts: ', D
     (R, X) = TransferInput(post_log, time_list)
     return (X, post_log, time_list, R, D)
