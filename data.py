@@ -1,7 +1,5 @@
 import numpy as np
 import math as math
-from pylab import * 
-import matplotlib.pyplot as plt
 
 # T: number of time intervals
 def ReadWeixin(fileDir):

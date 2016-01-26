@@ -1,7 +1,5 @@
 import numpy as np
 import math as math
-from pylab import * 
-import matplotlib.pyplot as plt
 
 class Model:
     def __init__(self, _X, _K, _D):
