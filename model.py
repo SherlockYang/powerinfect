@@ -133,7 +133,7 @@ class Model:
             loss = 0.0
             for t in xrange(self.T - 1):
                 #if t % 100 == 0:
-                    #print t
+                #    print t
                 # update theta at time t+1
                 self.CalcTheta(t + 1)
                 _X = self.Predict(t + 1)
@@ -154,10 +154,10 @@ class Model:
                     self.rho[k] = abs(self.rho[k])
                     self.delta[k] = abs(self.delta[k])    
                     if self.rho[k] > 1:
-                        p = pow(10, ceil(log10(self.rho[k])))
+                        p = pow(10, math.ceil(math.log10(self.rho[k])))
                         self.rho[k] /= p
                     if self.delta[k] > 1:
-                        p = pow(10, ceil(log10(self.delta[k])))
+                        p = pow(10, math.ceil(math.log10(self.delta[k])))
                         self.delta[k] /= p
             #self.ShowRho()
             #self.ShowDelta()
