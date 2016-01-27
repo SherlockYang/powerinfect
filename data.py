@@ -1,10 +1,11 @@
 import math as math
 
 # T: number of time intervals
+# post_log[d][i] = t, the i-th retweet of post d happens at time t
 def ReadWeixin(fileDir):
     file = open(fileDir)
     X = []
-    max_line = 3
+    max_line = 1000
     cnt = 0
     for line in file:
         x = []

@@ -13,7 +13,11 @@ class Model:
         self.beta = 1.0
         self.rho = [random.random() for _ in xrange(self.K)]
         self.delta = [random.random() for _ in xrange(self.K)]
-        self.theta = [[0 for _ in xrange(self.R)] for _ in range(self.T)]
+        for i in xrange(self.K):
+            self.rho[i] /= pow(2, i)
+            self.delta[i] /= pow(2, i)
+        self.delta[self.K - 1] = 0.0
+        self.theta = [[0 for _ in xrange(self.K)] for _ in range(self.T)]
         self.theta[0][0] = 1.0
 
     def SaveParameter(self):
@@ -46,8 +50,10 @@ class Model:
         for r in xrange(self.R):
             C += self.X[r][t] * self.CalcPhi(r, t)
         C /= self.D
-        self.theta[t][0] = self.theta[t - 1][0] - self.rho[0] * self.theta[t - 1][0] * self.delta[0] * C
-        for k in xrange(1, self.K):
+        if self.K > 1:
+            self.theta[t][0] = self.theta[t - 1][0] - self.rho[0] * self.theta[t - 1][0] * self.delta[0] * C
+            self.theta[t][self.K - 1] = self.theta[t - 1][self.K - 1] + self.rho[self.K - 2] * self.theta[t - 1][self.K - 2] * self.delta[self.K - 2] * C
+        for k in xrange(1, self.K - 1):
             self.theta[t][k] = self.theta[t - 1][k] + (self.rho[k - 1] * self.theta[t - 1][k - 1] * self.delta[k - 1] - self.rho[k] * self.theta[t - 1][k] * self.delta[k]) * C
 
     #####################################
@@ -84,7 +90,9 @@ class Model:
             C3 += self.X[r - 1][t] * self.CalcPhi(r - 1, t)
         for k in xrange(self.K):
             if t > 0:
-                _delta[k] = -1 * self.rho[k] * self.theta[t - 1][k]
+                _delta[k] = 0.0
+                if k < self.K - 1:
+                    _delta[k] -= self.rho[k] * self.theta[t - 1][k]
                 if k > 0:
                     _delta[k] += self.rho[k - 1] * self.theta[t - 1][k - 1]
                 _delta[k] = (C3 * _delta[k] * self.rho[k] * C2) / (self.D * self.D)
@@ -117,10 +125,10 @@ class Model:
     # max_iter: maximum number of iterations
     # we print out the squares at each iteration
     ################################
-    def Estimate(self, max_iter):
+    def Estimate(self, max_iter, dump):
         self.InitParameter()
         for iteration in xrange(max_iter):
-            print '##### Iter', iteration, ' #####'
+            print '########## Iter', iteration + 1, ' ##########'
             loss = 0.0
             for t in xrange(self.T - 1):
                 #if t % 100 == 0:
@@ -138,8 +146,9 @@ class Model:
                     loss += pow(error, 2)
                     (_rho, _delta) = self.CalcGradient(t, r, C[r])
                     for k in xrange(self.K):
-                        self.rho[k] += -2 * _rho[k] * error
-                        self.delta[k] += -2 * _delta[k] * error
+                        self.rho[k] += dump * 2 * _rho[k] * error
+                        self.delta[k] += dump * 2 * _delta[k] * error
+                continue
                 # adjust parameters to make them in [0, 1]
                 for k in xrange(self.K):
                     self.rho[k] = abs(self.rho[k])
@@ -150,25 +159,73 @@ class Model:
                     if self.delta[k] > 1:
                         p = pow(10, math.ceil(math.log10(self.delta[k])))
                         self.delta[k] /= p
-            #self.ShowRho()
-            #self.ShowDelta()
+            self.ShowRho()
+            self.ShowDelta()
             #self.ShowTheta()
             print 'square loss: ', loss 
+
+        print '##############################'
+        #self.ShowRho()
+        #self.ShowDelta()
+        #self.ShowTheta()
         self.SaveParameter()
 
-    def Fit(self, time_list):
+    def Fit(self, post_log, time_list, _T):
         Y = []
         _Y = []
-        for t in xrange(1, self.T):
-            _X = self.Predict(t)
+        for t in xrange(self.T):
+            if t > 0:
+                _X = self.Predict(t)
+            else:
+                _X = [self.X[i][t] for i in xrange(self.R)]
             y = 0
             _y = 0.0
             for r in xrange(self.R):
                 y += r * self.X[r][t]
                 _y += r * _X[r]
+                if t > 0:
+                    y -= r * self.X[r][t - 1]
+                    _y -= r * _last_X[r]
+            _last_X = _X
             Y += [y]
             _Y += [_y]
-
-        return (Y, _Y)
+        # adjust time intervals
+        min_t = -1
+        for log in post_log:
+            for t in log:
+                if t < min_t or min_t < 0:
+                    min_t = t
+        max_t = time_list[-1]
+        unit_t = (max_t - min_t + 1) / _T
+        y = 0
+        _y = 0.0
+        interval = 0
+        Z = []
+        _Z = []
+        _Theta = []
+        _theta = [0] * self.K
+        cnt = 0
+        for t in xrange(self.T):
+            if t == 0:
+                interval += time_list[t] - min_t
+            else:
+                interval += time_list[t] - time_list[t - 1]
+            y += Y[t]
+            _y += _Y[t]
+            for k in xrange(self.K):
+                _theta[k] += self.theta[t][k]
+            cnt += 1
+            if interval >= unit_t:# or t == self.T - 1:
+                Z += [y]
+                _Z += [_y]
+                for k in xrange(self.K):
+                    _theta[k] /= cnt
+                _Theta += [_theta]
+                _theta = [0] * self.K
+                y = 0
+                _y = 0.0
+                interval = 0
+                cnt = 0
+        return (Z, _Z, _Theta)
 
 

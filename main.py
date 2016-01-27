@@ -6,13 +6,16 @@ import fit
 print 'T: ', len(time_list)
 print 'R: ', R
 print 'D: ', D
-print 'Time list: ', time_list
-print 'Post logs:', post_log
-K = 2
+#print 'Time list: ', time_list
+#print 'Post logs:', post_log
+K = 5
 max_iter = 10
+time_interval = 100
+dump = 0.001
 pow_model = model.Model(X, K, D)
-pow_model.Estimate(max_iter)
-(Y, _Y) = pow_model.Fit(time_list)
-print 'Data: ', Y
-print 'Model: ', _Y
-fit.Draw(Y, _Y, len(Y) + 1)
+pow_model.Estimate(max_iter, dump)
+(Y, _Y, theta) = pow_model.Fit(post_log, time_list, time_interval)
+#print 'Data: ', Y
+#print 'Model: ', _Y
+#print 'Theta: ', theta
+fit.Draw(Y, _Y, theta, pow_model.rho, pow_model.delta, 5)
