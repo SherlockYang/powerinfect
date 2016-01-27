@@ -186,10 +186,11 @@ def Draw(y, _y, theta, rho, delta, T):
     #for vx in time_list:
     #    if vx > 0 and vx < len(Z[0]) - 1:
     #        plt.axvline(x = vx, linewidth=2, ls='--', color='black')
-    xticks = ['$\\theta_'+str(i)+'$' for i in xrange(len(Z))]
-    ax2.get_yaxis().set_ticks([])
+    xticks = ['$\\theta_'+str(len(Z) - i - 1)+'$' for i in xrange(len(Z))]
+    ax2.get_yaxis().set_ticks(np.array(xrange(0, len(Z))) + 0.5)
+    ax2.get_yaxis().set_ticklabels(xticks, size=32)
     ax2.get_xaxis().set_ticks([])
-    plt.ylabel('$\\theta$', size=44)
+    #plt.ylabel('$\\theta$', size=44)
     plt.savefig(file_dir, format='pdf', bbox_inches='tight')
     print 'Saving fig in ' + file_dir
 
