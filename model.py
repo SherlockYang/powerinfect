@@ -31,6 +31,23 @@ class Model:
             output.write(str(self.theta[i]) + '\n')
         output.close()
 
+    def LoadParameter(self, data_dir):
+        self.InitParameter()
+        file = open(data_dir)
+        cnt = 0
+        for line in file:
+            cnt += 1
+            tokens = line[1:len(line) - 2].split(',')
+            k = 0
+            for token in tokens:
+                if cnt == 2:
+                    self.rho[k] = float(token)
+                if cnt == 4:
+                    self.delta[k] = float(token)
+                if cnt > 5:
+                    self.theta[cnt - 6][k] = float(token)
+                k += 1
+
     def ShowRho(self):
         print 'rho: ', self.rho
 

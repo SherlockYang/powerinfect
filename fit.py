@@ -180,7 +180,7 @@ def Draw(y, _y, theta, rho, delta, T):
 
     print 'time intervals: ', time_list
     plt.xlim(0, len(Z[0]) - 1)
-    c = plt.pcolor(Z, vmax = 1.2, edgecolors='', cmap=plt.cm.gray_r, linewidth=4)
+    c = plt.pcolor(Z, vmax = 1.2, edgecolors='none', cmap=plt.cm.gray_r, linewidth=0)
     for hy in xrange(0, len(Z)):
         plt.axhline(y = hy, linewidth = 2, ls='--', color='black')
     #for vx in time_list:
