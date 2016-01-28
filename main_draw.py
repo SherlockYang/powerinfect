@@ -20,4 +20,4 @@ pow_model.LoadParameter('model')
 #print 'Data: ', Y
 #print 'Model: ', _Y
 #print 'Theta: ', theta
-fit.Draw(Y, _Y, theta, pow_model.rho, pow_model.delta, 5)
+fit.Draw(Y, _Y, theta, pow_model.rho, pow_model.delta, 5, 1)

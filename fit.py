@@ -129,7 +129,7 @@ def TransferThetaByTime(theta, time_list):
         h = t
     return _theta
 
-def Draw(y, _y, theta, rho, delta, T):
+def Draw(y, _y, theta, rho, delta, T, f):
     rc("font", **{"family":"serif", "serif":["Times"]})
     rc("ytick", labelsize = 22)
     rc("xtick", labelsize = 22)
@@ -146,7 +146,10 @@ def Draw(y, _y, theta, rho, delta, T):
     if t > 4:
         _y = smooth(_y, 2 * win)
         _y = _y[win : -win + 1]
-    ax1 = plt.subplot(211)
+    if f == 0:
+        ax1 = plt.subplot(111)
+    else:
+        ax1 = plt.subplot(211)
     #xfit = array([amin(x), amax(x)])
     plt.xlim(0, t - 1)
     #plt.ylim(80, 100)
@@ -158,7 +161,8 @@ def Draw(y, _y, theta, rho, delta, T):
     plt.ylabel('popularity', size=22)
     file_dir = 'figs/res' + str(t) + '.pdf'
 
-    ax2 = plt.subplot(212)
+    if f > 0:
+        ax2 = plt.subplot(212)
     k = len(theta[0])
     for i in xrange(len(theta)):
         for j in xrange(len(theta[i])):
@@ -182,17 +186,19 @@ def Draw(y, _y, theta, rho, delta, T):
             Z[len(Z) - j - 1][i] = tmp
 
     print 'time intervals: ', time_list
-    plt.xlim(0, len(Z[0]) - 1)
-    c = plt.pcolor(Z, vmax = 1.2, edgecolors='none', cmap=plt.cm.gray_r, linewidth=0)
+    if f > 0:
+        plt.xlim(0, len(Z[0]) - 1)
+        c = plt.pcolor(Z, vmax = 1.2, edgecolors='none', cmap=plt.cm.gray_r, linewidth=0)
     for hy in xrange(0, len(Z)):
         plt.axhline(y = hy, linewidth = 2, ls='--', color='black')
     #for vx in time_list:
     #    if vx > 0 and vx < len(Z[0]) - 1:
     #        plt.axvline(x = vx, linewidth=2, ls='--', color='black')
     xticks = ['$\\theta_'+str(len(Z) - i - 1)+'$' for i in xrange(len(Z))]
-    ax2.get_yaxis().set_ticks(np.array(xrange(0, len(Z))) + 0.5)
-    ax2.get_yaxis().set_ticklabels(xticks, size=25)
-    ax2.get_xaxis().set_ticks([])
+    if f > 0:
+        ax2.get_yaxis().set_ticks(np.array(xrange(0, len(Z))) + 0.5)
+        ax2.get_yaxis().set_ticklabels(xticks, size=25)
+        ax2.get_xaxis().set_ticks([])
     #plt.ylabel('$\\theta$', size=44)
     plt.savefig(file_dir, format='pdf', bbox_inches='tight')
     print 'Saving fig in ' + file_dir

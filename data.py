@@ -15,7 +15,7 @@ def ReadWeixin(fileDir, max_line):
         idx = 0
         if len(tokens) >= 4:
             idx = 3
-        if int(tokens[1]) != 3098663738:
+        if int(tokens[1]) != 3098660100:
             continue
         for i in xrange(idx, len(tokens)):
             token = tokens[i]
