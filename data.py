@@ -12,9 +12,13 @@ def ReadWeixin(fileDir, max_line):
     for line in file:
         x = []
         tokens = line.split(' ')
-        if line.find('http') != -1:
+        idx = 0
+        if len(tokens) >= 4:
+            idx = 3
+        if int(tokens[1]) != 3098663738:
             continue
-        for token in tokens:
+        for i in xrange(idx, len(tokens)):
+            token = tokens[i]
             a = token.split(':')
             if (len(a) < 2):
                 continue

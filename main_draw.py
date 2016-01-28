@@ -1,6 +1,6 @@
 import data
 import model
-#import fit
+import fit
 
 max_line = -1
 (X, post_log, time_list, R, D) = data.Load('../data/wechat_cascade', max_line)
@@ -14,8 +14,8 @@ max_iter = 3
 time_interval = 100
 dump = 0.002
 pow_model = model.Model(X, K, D)
-pow_model.Estimate(max_iter, dump)
-#pow_model.LoadParameter('model')
+#pow_model.Estimate(max_iter, dump)
+pow_model.LoadParameter('model')
 (Y, _Y, theta) = pow_model.Fit(post_log, time_list, time_interval)
 #print 'Data: ', Y
 #print 'Model: ', _Y

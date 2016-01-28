@@ -141,7 +141,7 @@ def Draw(y, _y, theta, rho, delta, T):
     t = len(_y)
     if t < T:
         T = t
-    win = 4
+    win = 2
     x = xrange(t)
     if t > 4:
         _y = smooth(_y, 2 * win)
@@ -160,6 +160,9 @@ def Draw(y, _y, theta, rho, delta, T):
 
     ax2 = plt.subplot(212)
     k = len(theta[0])
+    for i in xrange(len(theta)):
+        for j in xrange(len(theta[i])):
+            theta[i][j] = abs(theta[i][j])
     (Z, time_list) = TransferTheta(theta, T)
     print 'DP generated time list: ', time_list
     #time_list = [1, 6, 10, 17, 21]
@@ -188,7 +191,7 @@ def Draw(y, _y, theta, rho, delta, T):
     #        plt.axvline(x = vx, linewidth=2, ls='--', color='black')
     xticks = ['$\\theta_'+str(len(Z) - i - 1)+'$' for i in xrange(len(Z))]
     ax2.get_yaxis().set_ticks(np.array(xrange(0, len(Z))) + 0.5)
-    ax2.get_yaxis().set_ticklabels(xticks, size=32)
+    ax2.get_yaxis().set_ticklabels(xticks, size=25)
     ax2.get_xaxis().set_ticks([])
     #plt.ylabel('$\\theta$', size=44)
     plt.savefig(file_dir, format='pdf', bbox_inches='tight')
