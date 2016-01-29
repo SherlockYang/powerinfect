@@ -2,7 +2,7 @@ import data
 import model
 import fit
 
-max_line = -1
+max_line = 50
 (X, post_log, time_list, R, D) = data.Load('../data/wechat_cascade', max_line)
 print 'T: ', len(time_list)
 print 'R: ', R

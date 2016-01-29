@@ -15,7 +15,7 @@ def ReadWeixin(fileDir, max_line):
         idx = 0
         if len(tokens) >= 4:
             idx = 3
-        if int(tokens[1]) != 3098660100:
+        if int(tokens[1]) != 3098664719:
             continue
         for i in xrange(idx, len(tokens)):
             token = tokens[i]
@@ -121,5 +121,6 @@ def Load(file_dir, max_line):
     post_log = ReadWeixin(file_dir, max_line)
     D = len(post_log)
     time_list = DefineTimeInterval(post_log)
+    print 'T: ', len(time_list)
     (R, X) = TransferInput(post_log, time_list)
     return (X, post_log, time_list, R, D)
