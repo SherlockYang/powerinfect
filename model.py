@@ -8,6 +8,7 @@ class Model:
         self.D = _D
         self.R = len(_X)
         self.T = len(_X[0])
+        self.mu = 0
 
     def InitParameter(self):
         self.beta = 1.0
@@ -20,8 +21,8 @@ class Model:
         self.theta = [[0 for _ in xrange(self.K)] for _ in range(self.T)]
         self.theta[0][0] = 1.0
 
-    def SaveParameter(self):
-        output = open('model', 'w')
+    def SaveParameter(self, model_dir):
+        output = open(model_dir, 'w')
         output.write('rho:\n')
         output.write(str(self.rho) + '\n')
         output.write('delta:\n')
@@ -130,7 +131,7 @@ class Model:
             x = -1 * self.X[r][t - 1] * self.CalcPhi(r, t)
             if r > 0:
                 x += self.X[r - 1][t - 1] * self.CalcPhi(r - 1, t - 1)
-            x = x * C / self.D + self.X[r][t - 1]
+            x = abs(x * C / self.D + self.X[r][t - 1])
             _X += [x]
         return _X
 
@@ -144,6 +145,7 @@ class Model:
     ################################
     def Estimate(self, max_iter, dump):
         self.InitParameter()
+        self.mu = 0.0
         for iteration in xrange(max_iter):
             print '########## Iter', iteration + 1, ' ##########'
             loss = 0.0
@@ -185,7 +187,7 @@ class Model:
         #self.ShowRho()
         #self.ShowDelta()
         #self.ShowTheta()
-        self.SaveParameter()
+        #self.SaveParameter()
 
     def Fit(self, post_log, time_list, _T):
         Y = []

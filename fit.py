@@ -5,6 +5,8 @@ from pylab import *
 from matplotlib import rc
 from matplotlib.ticker import MaxNLocator
 import matplotlib.patches as patches
+from scipy import stats
+from matplotlib.ticker import OldScalarFormatter, ScalarFormatter
 
 def smooth(x, window_len=11, window='hanning'):
     """smooth the data using a window with requested size.
@@ -129,7 +131,7 @@ def TransferThetaByTime(theta, time_list):
         h = t
     return _theta
 
-def Draw(y, _y, theta, rho, delta, T, f):
+def Draw(y, _y, theta, rho, delta, T, f, mu, post_id):
     rc("font", **{"family":"serif", "serif":["Times"]})
     rc("ytick", labelsize = 22)
     rc("xtick", labelsize = 22)
@@ -138,6 +140,9 @@ def Draw(y, _y, theta, rho, delta, T, f):
     #rcParams['ps.fonttype'] = 42
     #rcParams['text.usetex'] = True
     
+    N = 0
+    for i in y:
+        N += i
     t = len(_y)
     if t < T:
         T = t
@@ -150,25 +155,32 @@ def Draw(y, _y, theta, rho, delta, T, f):
         ax1 = plt.subplot(111)
     else:
         ax1 = plt.subplot(211)
+    _y = abs(_y)
     #xfit = array([amin(x), amax(x)])
     plt.xlim(0, t - 1)
     #plt.ylim(80, 100)
     data = plt.plot(x, y, 'o', markeredgecolor='black', markerfacecolor='None', mew=1, ms=13, label='Data')
     model = plt.plot(x, _y, '-', color='#E74C3C', lw=3, label='Model')
     ax1.legend(fontsize=22, numpoints=1)
-    #ax1.get_xaxis().set_ticks([])
-    plt.xlabel('time', size=22)
-    plt.ylabel('popularity', size=22)
-    file_dir = 'figs/res' + str(t) + '.pdf'
+    ax1.get_xaxis().set_ticks([])
+    i = 0
+    yticks = ax1.get_yticklabels()
+    for label in yticks:
+        if i % 3 != 0:
+            label.set_visible(False)
+        i += 1
+    ax1.set_xlabel('time', size=18)
+    ax1.set_ylabel('popularity', size=22)
+    file_dir = 'figs/160205/res' + str(post_id) + '.pdf'
 
     if f > 0:
-        ax2 = plt.subplot(212)
+        ax2 = plt.subplot(224)
     k = len(theta[0])
     for i in xrange(len(theta)):
         for j in xrange(len(theta[i])):
             theta[i][j] = abs(theta[i][j])
     (Z, time_list) = TransferTheta(theta, T)
-    print 'DP generated time list: ', time_list
+    #print 'DP generated time list: ', time_list
     #time_list = [1, 6, 10, 17, 21]
     Z = TransferThetaByTime(theta, time_list)
     Z = np.asarray(theta).T
@@ -178,7 +190,7 @@ def Draw(y, _y, theta, rho, delta, T, f):
     #        for k in xrange(j * t / T, (j + 1) * t / T):
     #            Z[i][j] += theta[k][i]
     #        Z[i][j] /= t / T
-    print 'Z: ', Z
+    #print 'Z: ', Z
     for i in xrange(len(Z[0])):
         for j in xrange(len(Z) / 2):
             tmp = Z[j][i]
@@ -199,7 +211,51 @@ def Draw(y, _y, theta, rho, delta, T, f):
         ax2.get_yaxis().set_ticks(np.array(xrange(0, len(Z))) + 0.5)
         ax2.get_yaxis().set_ticklabels(xticks, size=25)
         ax2.get_xaxis().set_ticks([])
+        ax2.set_xlabel('time', size = 22)
     #plt.ylabel('$\\theta$', size=44)
+
+    if f > 0:
+        ax3 = plt.subplot(223)
+    #mu = float(N) / len(y)
+    print 'lambda: ', mu
+    x3 = np.arange(N)
+    y3 = mu * pow(math.e, -mu * x3)
+    y3 = []
+    x3 = []
+    for n in xrange(N):
+        _y3 = mu * pow(math.e, -mu * n)
+        if len(y3) > 0 and y3[0] / _y3 > 1e5:
+            break
+        y3 += [_y3]
+        x3 += [n]
+    print x3[0:10]
+    print y3[0:10]
+    h = abs(int(floor(log(y3[0]) / log(10))))
+    print h
+    for i in xrange(len(y3)):
+        y3[i] *= pow(10, h - 2)
+    ax3.set_xlim(0, len(x3))
+    ax3.plot(x3, y3, '-', markeredgecolor='red', markerfacecolor='None', mew=1, ms=13)
+    i = 0
+    yticks = ax3.get_yticklabels()
+    for label in yticks:
+        if i % 3 != 0: 
+            label.set_visible(False)
+        i += 1
+    i = 0
+    xticks = ax3.get_xticklabels()
+    for label in xticks:
+        if i % 3 != 0:
+            label.set_visible(False)
+        i += 1
+    ax3.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    ax3.set_xlabel('time interval (seconds)', size = 22)
+    if h > 2:
+        ax3.annotate('$\\times 10^{-' + str(h - 2) + '}$', (0.02, 0.85), xycoords='axes fraction', size=22)
+    h = abs(int(floor(log(mu) / log(10))))
+    ax3.annotate('$\\mu=' + str(round(mu * pow(10, h), 2)) + '\\times10^{-' + str(h) + '}$', (0.4, 0.7), xycoords='axes fraction', size=22)
+    
     plt.savefig(file_dir, format='pdf', bbox_inches='tight')
+    plt.close()
     print 'Saving fig in ' + file_dir
 

@@ -3,6 +3,8 @@ REST= README makefile
 
 
 #interactive
+all: 	main.py main_draw.py
+	pypy main.py python main_draw.py
 fit: 	main.py
 	pypy main.py
 draw:	main_draw.py

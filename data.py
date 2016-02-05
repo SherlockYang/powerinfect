@@ -3,21 +3,19 @@ import time
 
 # T: number of time intervals
 # post_log[d][i] = t, the i-th retweet of post d happens at time t
-def ReadWeixin(fileDir, max_line):
+def ReadWeixin(fileDir, max_line, post_id):
     file = open(fileDir)
     X = []
     cnt = 0
     min_t = -1
     max_t = -1
+    N = 0
     for line in file:
         x = []
         tokens = line.split(' ')
-        idx = 0
-        if len(tokens) >= 4:
-            idx = 3
-        if int(tokens[1]) != 3098664719:
+        if str(tokens[1]) != post_id and post_id > 0:
             continue
-        for i in xrange(idx, len(tokens)):
+        for i in xrange(len(tokens)):
             token = tokens[i]
             a = token.split(':')
             if (len(a) < 2):
@@ -28,6 +26,7 @@ def ReadWeixin(fileDir, max_line):
             if t < min_t or min_t < 0:
                 min_t = t
             x += [t]  
+            N += 1
         X += [x]
         cnt += 1
         if cnt >= max_line and max_line > 0:
@@ -41,23 +40,37 @@ def ReadWeixin(fileDir, max_line):
     output = open('scale_wechat.dis', 'w') 
     for i in xrange(len(scale)):
         output.write(str(i) + ' ' + str(scale[i]) + '\n')
+    mu = float(N) / (max_t - min_t + 1.0)
+    print N, max_t - min_t + 1
     #print 'D:', len(X)
     #print time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(min_t))
     #print time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(max_t))
-    return X
+    return [X, mu]
 
 def pair_cmp(a, b):
     return cmp(a[0], b[0])
 
-def DefineTimeInterval(post_log): 
+def DefineTimeInterval(post_log, T): 
     I = []
     # L[i]=(t, d): post d is retweeted once at time t
     L = []
     post_id = -1
+    min_t = -1
+    max_t = -1
     for log in post_log:
         post_id += 1
         for t in log:
             L += [(t, post_id)]
+            if t < min_t or min_t < 0:
+                min_t = t
+            if t > max_t:
+                max_t = t
+    if T != -1:
+        u = (max_t - min_t + 1) / T
+        print max_t, min_t, T
+        for i in xrange(min_t + u, max_t + u, u):
+            I += [i]
+        return I
     L.sort(pair_cmp)
     L += [(L[len(L) - 1][0] + 1, -1)]
     print '#retweets: ', len(L)
@@ -117,10 +130,9 @@ def TransferInput(post_log, time_list):
     #print 'X^T: ', [[X[i][j] for i in xrange(R)] for j in range(T)]
     return (R, X)
 
-def Load(file_dir, max_line):
-    post_log = ReadWeixin(file_dir, max_line)
+def Load(file_dir, max_line, time_num, post_id):
+    (post_log, mu) = ReadWeixin(file_dir, max_line, post_id)
     D = len(post_log)
-    time_list = DefineTimeInterval(post_log)
-    print 'T: ', len(time_list)
+    time_list = DefineTimeInterval(post_log, time_num)
     (R, X) = TransferInput(post_log, time_list)
-    return (X, post_log, time_list, R, D)
+    return (X, post_log, time_list, R, D, mu)
